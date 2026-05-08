@@ -1,6 +1,27 @@
 # 빠른 시작 가이드
 
-## 1. 백엔드 실행
+## 가장 쉬운 실행 방법 (Windows)
+
+레포를 clone한 뒤, repo 루트의 아래 파일을 더블클릭합니다.
+
+```text
+start-localcourse.bat
+```
+
+이 파일은 백엔드와 웹 프론트엔드를 각각 새 창에서 실행합니다.
+
+모바일 Expo Go로 테스트하려면 아래 파일을 사용합니다.
+
+```text
+start-backend.bat
+start-frontend.bat
+```
+
+`start-backend.bat`를 먼저 실행하고, 그 다음 `start-frontend.bat`를 실행한 뒤 QR 코드를 Expo Go로 스캔합니다.
+
+## 수동 실행 방법
+
+### 1. 백엔드 실행
 
 Windows PowerShell:
 
