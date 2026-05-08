@@ -49,9 +49,40 @@ router.post('/login', (req, res) => {
 // 내 정보 (머니 잔액 갱신용)
 router.get('/me', authRequired, (req, res) => {
   const user = db
-    .prepare('SELECT id, email, nickname, money FROM users WHERE id = ?')
+    .prepare('SELECT id, email, nickname, money, verified_region FROM users WHERE id = ?')
     .get(req.userId);
   if (!user) return res.status(404).json({ error: '유저 없음' });
+  res.json({ user });
+});
+
+// 내가 등록한 코스
+router.get('/my-courses', authRequired, (req, res) => {
+  const courses = db.prepare(`
+    SELECT c.id, c.province, c.city, c.title, c.price, c.tags, c.image_url, c.created_at
+    FROM courses c WHERE c.seller_id = ? ORDER BY c.created_at DESC
+  `).all(req.userId);
+  res.json({ courses: courses.map(c => ({ ...c, tags: JSON.parse(c.tags || '[]') })) });
+});
+
+// 구매한 코스
+router.get('/my-purchases', authRequired, (req, res) => {
+  const courses = db.prepare(`
+    SELECT c.id, c.province, c.city, c.title, c.price, c.tags, c.image_url, u.nickname as seller, p.purchased_at
+    FROM purchases p
+    JOIN courses c ON p.course_id = c.id
+    JOIN users u ON c.seller_id = u.id
+    WHERE p.user_id = ?
+    ORDER BY p.purchased_at DESC
+  `).all(req.userId);
+  res.json({ courses: courses.map(c => ({ ...c, tags: JSON.parse(c.tags || '[]') })) });
+});
+
+// 지역 인증
+router.post('/verify-region', authRequired, (req, res) => {
+  const { region } = req.body || {};
+  if (!region) return res.status(400).json({ error: '지역 정보가 없습니다' });
+  db.prepare('UPDATE users SET verified_region = ? WHERE id = ?').run(region, req.userId);
+  const user = db.prepare('SELECT id, email, nickname, money, verified_region FROM users WHERE id = ?').get(req.userId);
   res.json({ user });
 });
 

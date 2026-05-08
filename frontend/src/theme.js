@@ -1,16 +1,17 @@
 export const colors = {
-  primary: '#1D9E75',
-  primaryDark: '#085041',
-  primaryLight: '#E1F5EE',
-  bg: '#FAFAF7',
-  card: '#FFFFFF',
-  text: '#1A1A1A',
-  textMuted: '#6B6B6B',
-  textLight: '#9A9A9A',
-  border: '#E5E5E0',
-  danger: '#D85A30',
-  warning: '#EF9F27',
+  primary:      '#0A84FF',   // iOS blue
+  primaryDark:  '#0055CC',
+  primaryLight: '#001D3D',   // dark blue surface
+  bg:           '#1A1A1E',   // dark charcoal (not pure black)
+  card:         '#242428',   // elevated card
+  surface:      '#2C2C30',   // raised surface
+  text:         '#F2F2F7',   // Apple off-white
+  textMuted:    '#8E8E93',   // Apple secondary label
+  textLight:    '#636366',   // Apple tertiary label
+  border:       '#3A3A3E',   // subtle separator
+  danger:       '#FF453A',
+  warning:      '#FF9F0A',
 };
 
-export const radius = { sm: 8, md: 12, lg: 16, pill: 999 };
+export const radius = { sm: 8, md: 12, lg: 18, pill: 999 };
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 };
