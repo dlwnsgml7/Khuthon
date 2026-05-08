@@ -14,6 +14,8 @@ if not exist "%FRONTEND_DIR%\package.json" (
 
 cd /d "%FRONTEND_DIR%"
 
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-NetTCPConnection -LocalPort 8085 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Write-Host 'Stopping existing Expo process on port 8085...'; Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2"
+
 if not exist "node_modules" (
   echo Installing frontend dependencies...
   call npm install
