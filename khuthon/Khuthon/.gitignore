@@ -1,0 +1,10 @@
+node_modules/
+.expo/
+*.log
+
+backend/localcourse.json
+backend/localcourse.db
+backend/*.db
+backend/*.db-*
+
+.env
