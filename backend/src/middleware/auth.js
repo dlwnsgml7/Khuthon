@@ -21,4 +21,16 @@ function signToken(userId) {
   return jwt.sign({ userId }, SECRET, { expiresIn: '7d' });
 }
 
-module.exports = { authRequired, signToken };
+// 토큰이 있으면 userId 세팅, 없어도 통과
+function authOptional(req, res, next) {
+  const auth = req.headers.authorization;
+  if (auth && auth.startsWith('Bearer ')) {
+    try {
+      const payload = jwt.verify(auth.slice(7), SECRET);
+      req.userId = payload.userId;
+    } catch (e) {}
+  }
+  next();
+}
+
+module.exports = { authRequired, authOptional, signToken };

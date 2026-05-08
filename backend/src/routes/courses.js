@@ -1,27 +1,71 @@
 const express = require('express');
 const db = require('../db');
-const { authRequired } = require('../middleware/auth');
+const { authRequired, authOptional } = require('../middleware/auth');
 
 const router = express.Router();
 
-// 도/시별 코스 목록 (잠긴 상태 - 제목/태그/가격만 노출)
-router.get('/', (req, res) => {
+// 코스 등록
+router.post('/', authRequired, (req, res) => {
+  const { province, city, title, description, price, tags, places, image_url } = req.body;
+  if (!province || !city || !title) {
+    return res.status(400).json({ error: '지역, 도시, 제목은 필수입니다' });
+  }
+  const result = db.prepare(`
+    INSERT INTO courses (seller_id, province, city, title, description, price, tags, places, image_url)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    req.userId, province, city, title, description || '',
+    parseInt(price) || 1000,
+    JSON.stringify(tags || []),
+    JSON.stringify(places || []),
+    image_url || null,
+  );
+  res.status(201).json({ id: result.lastInsertRowid });
+});
+
+// 도/시별 코스 목록 (별점·구매수·구매여부 포함)
+router.get('/', authOptional, (req, res) => {
   const { province, city } = req.query;
-  let query = `
-    SELECT c.id, c.province, c.city, c.title, c.price, c.tags, u.nickname as seller
-    FROM courses c JOIN users u ON c.seller_id = u.id
-  `;
-  const params = [];
   const where = [];
+  const params = [];
   if (province) { where.push('c.province = ?'); params.push(province); }
   if (city)     { where.push('c.city = ?');     params.push(city); }
-  if (where.length) query += ' WHERE ' + where.join(' AND ');
-  query += ' ORDER BY c.created_at DESC';
 
-  const rows = db.prepare(query).all(...params);
+  const whereClause = where.length ? 'WHERE ' + where.join(' AND ') : '';
+
+  const rows = db.prepare(`
+    SELECT
+      c.id, c.province, c.city, c.title, c.price, c.tags, c.image_url,
+      u.nickname AS seller,
+      COUNT(DISTINCT p.id)  AS purchase_count,
+      ROUND(AVG(r.rating), 1) AS avg_rating,
+      COUNT(DISTINCT r.id)  AS review_count
+    FROM courses c
+    JOIN users u ON c.seller_id = u.id
+    LEFT JOIN purchases p ON p.course_id = c.id
+    LEFT JOIN reviews   r ON r.course_id = c.id
+    ${whereClause}
+    GROUP BY c.id
+    ORDER BY COALESCE(ROUND(AVG(r.rating), 1), 0) DESC,
+             COUNT(DISTINCT p.id) DESC,
+             c.created_at DESC
+  `).all(...params);
+
+  // 로그인 유저의 구매 여부
+  const purchasedSet = new Set();
+  if (req.userId) {
+    db.prepare('SELECT course_id FROM purchases WHERE user_id = ?')
+      .all(req.userId)
+      .forEach(p => purchasedSet.add(p.course_id));
+  }
+
   const list = rows.map(r => ({
     ...r,
-    tags: JSON.parse(r.tags || '[]'),
+    tags:           JSON.parse(r.tags || '[]'),
+    purchase_count: r.purchase_count || 0,
+    avg_rating:     r.avg_rating || null,
+    review_count:   r.review_count || 0,
+    purchased:      purchasedSet.has(r.id),
   }));
   res.json({ courses: list });
 });
@@ -66,7 +110,9 @@ router.get('/:id', authRequired, (req, res) => {
     city: course.city,
     price: course.price,
     seller: course.seller,
+    seller_id: course.seller_id,
     tags: JSON.parse(course.tags || '[]'),
+    image_url: course.image_url || null,
     unlocked: !!purchased,
   };
 

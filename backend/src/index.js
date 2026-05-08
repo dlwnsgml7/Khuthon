@@ -2,8 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
-const authRoutes = require('./routes/auth');
+const authRoutes   = require('./routes/auth');
 const courseRoutes = require('./routes/courses');
+const chatRoutes   = require('./routes/chat');
+const reviewRoutes = require('./routes/reviews');
 
 // DB 초기화 (시드 포함)
 require('./db');
@@ -18,6 +20,8 @@ app.get('/', (_req, res) => {
 
 app.use('/auth', authRoutes);
 app.use('/courses', courseRoutes);
+app.use('/chat', chatRoutes);
+app.use('/reviews', reviewRoutes);
 
 // 에러 핸들러
 app.use((err, _req, res, _next) => {

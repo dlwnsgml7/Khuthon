@@ -54,11 +54,22 @@ export const api = {
     const q = new URLSearchParams();
     if (province) q.set('province', province);
     if (city) q.set('city', city);
-    return request(`/courses?${q.toString()}`);
+    return request(`/courses?${q.toString()}`, { auth: true });
   },
   countsByProvince: () => request('/courses/counts/by-province'),
   countsByCity: (province) =>
     request(`/courses/counts/by-city?province=${encodeURIComponent(province)}`),
+  chatRooms:    () => request('/chat/rooms', { auth: true }),
+  chatMessages: (courseId, otherId) => request(`/chat/room/${courseId}/${otherId}`, { auth: true }),
+  sendMessage:  (receiver_id, course_id, content) =>
+    request('/chat/send', { method: 'POST', body: { receiver_id, course_id, content }, auth: true }),
+  getReviews:   (courseId) => request(`/reviews/${courseId}`),
+  submitReview: (courseId, rating, comment) =>
+    request(`/reviews/${courseId}`, { method: 'POST', body: { rating, comment }, auth: true }),
+  myCourses:    () => request('/auth/my-courses', { auth: true }),
+  myPurchases:  () => request('/auth/my-purchases', { auth: true }),
+  verifyRegion: (region) => request('/auth/verify-region', { method: 'POST', body: { region }, auth: true }),
+  createCourse: (data) => request('/courses', { method: 'POST', body: data, auth: true }),
   courseDetail: (id) => request(`/courses/${id}`, { auth: true }),
   purchaseCourse: (id) => request(`/courses/${id}/purchase`, { method: 'POST', auth: true }),
 };
