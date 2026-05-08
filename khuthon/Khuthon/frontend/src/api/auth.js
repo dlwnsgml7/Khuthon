@@ -3,41 +3,70 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './client';
 
 const AuthContext = createContext(null);
+const STORAGE_TIMEOUT_MS = 3000;
+
+function withTimeout(promise, timeoutMs, fallback = null) {
+  return Promise.race([
+    promise,
+    new Promise((resolve) => setTimeout(() => resolve(fallback), timeoutMs)),
+  ]);
+}
+
+async function getStoredToken() {
+  return await withTimeout(AsyncStorage.getItem('token'), STORAGE_TIMEOUT_MS, null);
+}
+
+async function setStoredToken(token) {
+  await withTimeout(AsyncStorage.setItem('token', token), STORAGE_TIMEOUT_MS);
+}
+
+async function removeStoredToken() {
+  await withTimeout(AsyncStorage.removeItem('token'), STORAGE_TIMEOUT_MS);
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     (async () => {
-      const token = await AsyncStorage.getItem('token');
-      if (token) {
-        try {
-          const { user } = await api.me();
-          setUser(user);
-        } catch {
-          await AsyncStorage.removeItem('token');
+      try {
+        const token = await getStoredToken();
+        if (token) {
+          try {
+            const { user } = await api.me();
+            if (mounted) setUser(user);
+          } catch {
+            await removeStoredToken();
+          }
         }
+      } finally {
+        if (mounted) setLoading(false);
       }
-      setLoading(false);
     })();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const login = async (email, password) => {
     const { token, user } = await api.login(email, password);
-    await AsyncStorage.setItem('token', token);
     setUser(user);
+    await setStoredToken(token);
   };
 
   const signup = async (email, password, nickname) => {
     const { token, user } = await api.signup(email, password, nickname);
-    await AsyncStorage.setItem('token', token);
     setUser(user);
+    await setStoredToken(token);
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem('token');
     setUser(null);
+    await removeStoredToken();
   };
 
   const refreshUser = async () => {
