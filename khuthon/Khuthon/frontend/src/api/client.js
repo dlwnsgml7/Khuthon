@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 // Expo Go에서 백엔드 접근:
 // - 같은 와이파이의 PC IP 주소 사용 권장
@@ -12,8 +13,17 @@ import { Platform } from 'react-native';
 const LAN_IP = '192.168.0.10'; // ⚠️ 본인 PC IP로 수정
 const PORT = 4000;
 
+function getExpoHostIp() {
+  const hostUri = Constants.expoConfig?.hostUri || Constants.manifest2?.extra?.expoGo?.debuggerHost;
+  return hostUri ? hostUri.split(':')[0] : null;
+}
+
 export const BASE_URL = (() => {
   if (Platform.OS === 'web') return `http://localhost:${PORT}`;
+
+  const expoHostIp = getExpoHostIp();
+  if (expoHostIp) return `http://${expoHostIp}:${PORT}`;
+
   if (Platform.OS === 'android') return `http://10.0.2.2:${PORT}`;
   if (Platform.OS === 'ios') return `http://localhost:${PORT}`;
   return `http://${LAN_IP}:${PORT}`;
