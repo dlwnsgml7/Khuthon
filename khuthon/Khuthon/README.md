@@ -109,14 +109,14 @@ LocalCourse는 현지인이 알고 있는 진짜 여행 정보를 소액으로 �
 
 **Frontend (Mobile)**
 - React Native + Expo
-- TypeScript
+- JavaScript
 - React Navigation (화면 전환)
 - React Native SVG (한반도 지도 인터랙션)
 - AsyncStorage (로그인 토큰 / 세션)
 
 **Backend**
 - Node.js + Express
-- SQLite (해커톤용 경량 DB, 추후 PostgreSQL 마이그레이션)
+- JSON 파일 저장소 (해커톤용 경량 DB, 추후 SQLite/PostgreSQL 마이그레이션)
 - JWT (인증)
 
 **개발 도구**
@@ -151,17 +151,22 @@ LocalCourse는 현지인이 알고 있는 진짜 여행 정보를 소액으로 �
 git clone https://github.com/dlwnsgml7/Khuthon.git
 cd Khuthon
 
-# 2. 프론트엔드 실행
-cd frontend
-npm install
-npx expo start
-# → QR 코드를 Expo Go 앱으로 스캔하면 모바일에서 바로 확인 가능
+# 실제 앱 소스 위치
+cd khuthon/Khuthon
 
-# 3. 백엔드 실행 (다른 터미널)
+# 2. 백엔드 실행
 cd backend
 npm install
-cp .env.example .env
+copy .env.example .env
 npm run dev
+# → http://localhost:4000
+
+# 3. 프론트엔드 실행 (다른 터미널)
+cd ../frontend
+npm install
+npx expo start --web
+# → 웹: http://localhost:8081 또는 터미널에 표시되는 URL
+# → 모바일: npx expo start 후 QR 코드를 Expo Go 앱으로 스캔
 ```
 
 ---
@@ -170,40 +175,38 @@ npm run dev
 
 ```
 Khuthon/
-├── frontend/                  # React Native + Expo 앱
-│   ├── App.tsx                # 앱 진입점
-│   ├── src/
-│   │   ├── screens/           # 화면 컴포넌트
-│   │   │   ├── LoginScreen.tsx
-│   │   │   ├── SignupScreen.tsx
-│   │   │   ├── HomeScreen.tsx       # 한반도 지도
-│   │   │   ├── ProvinceScreen.tsx   # 도 → 시 확대
-│   │   │   ├── CourseListScreen.tsx # 코스 목록
-│   │   │   ├── CourseDetailScreen.tsx
-│   │   │   └── PaymentScreen.tsx
-│   │   ├── components/        # 재사용 컴포넌트
-│   │   │   ├── KoreaMap.tsx
-│   │   │   ├── CourseCard.tsx
-│   │   │   └── TagBadge.tsx
-│   │   ├── navigation/        # React Navigation 설정
-│   │   ├── api/               # 백엔드 API 호출 함수
-│   │   ├── types/             # TypeScript 타입
-│   │   └── assets/            # 이미지, 지도 SVG 등
-│   └── package.json
-│
-├── backend/                   # Node.js + Express 서버
-│   ├── src/
-│   │   ├── routes/            # API 라우트
-│   │   │   ├── auth.ts        # 회원가입 / 로그인
-│   │   │   ├── courses.ts     # 코스 CRUD
-│   │   │   └── payment.ts     # 머니 결제
-│   │   ├── models/            # DB 스키마
-│   │   ├── middleware/        # 인증 미들웨어
-│   │   └── index.ts           # 서버 진입점
-│   ├── .env.example
-│   └── package.json
-│
-└── README.md
+└── khuthon/
+    └── Khuthon/
+        ├── frontend/          # React Native + Expo 앱
+        │   ├── App.js         # 앱 진입점
+        │   ├── src/
+        │   │   ├── screens/   # 화면 컴포넌트
+        │   │   │   ├── LoginScreen.js
+        │   │   │   ├── SignupScreen.js
+        │   │   │   ├── HomeScreen.js
+        │   │   │   ├── ProvinceScreen.js
+        │   │   │   ├── CourseListScreen.js
+        │   │   │   ├── CourseDetailScreen.js
+        │   │   │   └── ChargeScreen.js
+        │   │   ├── components/
+        │   │   │   └── KoreaMap.js
+        │   │   ├── navigation/
+        │   │   ├── api/
+        │   │   └── assets/
+        │   └── package.json
+        │
+        ├── backend/           # Node.js + Express 서버
+        │   ├── src/
+        │   │   ├── routes/
+        │   │   │   ├── auth.js
+        │   │   │   └── courses.js
+        │   │   ├── db.js      # JSON 파일 저장소
+        │   │   ├── middleware/
+        │   │   └── index.js
+        │   ├── .env.example
+        │   └── package.json
+        │
+        └── README.md
 ```
 
 ---
