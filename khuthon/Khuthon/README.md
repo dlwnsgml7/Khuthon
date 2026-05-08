@@ -146,6 +146,27 @@ LocalCourse는 현지인이 알고 있는 진짜 여행 정보를 소액으로 �
 
 ### 실행 방법
 
+#### Windows 실행 스크립트
+
+레포를 clone한 뒤 repo 루트에서 아래 파일을 실행하면 됩니다.
+
+```text
+start-localcourse.bat
+```
+
+이 스크립트는 백엔드와 웹 프론트엔드를 각각 새 창에서 실행합니다.
+
+휴대폰 Expo Go로 테스트하려면:
+
+```text
+start-backend.bat
+start-frontend.bat
+```
+
+`start-backend.bat`를 먼저 실행하고, 그 다음 `start-frontend.bat`를 실행한 뒤 QR 코드를 Expo Go로 스캔합니다.
+
+#### 수동 실행
+
 ```bash
 # 1. 레포 클론
 git clone https://github.com/dlwnsgml7/Khuthon.git

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 // Expo Go에서 백엔드 접근:
 // - 같은 와이파이의 PC IP 주소 사용 권장
@@ -11,9 +12,23 @@ import { Platform } from 'react-native';
 
 const LAN_IP = '192.168.0.10'; // ⚠️ 본인 PC IP로 수정
 const PORT = 4000;
+const REQUEST_TIMEOUT_MS = 8000;
+
+function getExpoHostIp() {
+  const hostUri =
+    Constants.expoConfig?.hostUri ||
+    Constants.manifest2?.extra?.expoGo?.debuggerHost ||
+    Constants.manifest?.debuggerHost ||
+    Constants.manifest?.hostUri;
+  return hostUri ? hostUri.split(':')[0] : null;
+}
 
 export const BASE_URL = (() => {
   if (Platform.OS === 'web') return `http://localhost:${PORT}`;
+
+  const expoHostIp = getExpoHostIp();
+  if (expoHostIp) return `http://${expoHostIp}:${PORT}`;
+
   if (Platform.OS === 'android') return `http://10.0.2.2:${PORT}`;
   if (Platform.OS === 'ios') return `http://localhost:${PORT}`;
   return `http://${LAN_IP}:${PORT}`;
@@ -30,11 +45,25 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  let res;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error(`백엔드 연결 시간 초과: ${BASE_URL}`);
+    }
+    throw new Error(`백엔드 연결 실패: ${BASE_URL}`);
+  } finally {
+    clearTimeout(timeout);
+  }
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
